@@ -1,12 +1,6 @@
 import calculatorData from '@/data/calculatorData.json';
 import { CalculatorFormValues } from '@/lib/schemas';
-
-interface CalculationResult {
-  totalCost: number;
-  totalArea: number;
-  roomAreaDetails: Record<string, number>;
-  error?: string;
-}
+import { CalculationResult, CalculatorData } from '@/lib/types'; // Import types
 
 export function calculateBuildingCost(
   values: CalculatorFormValues
@@ -18,8 +12,8 @@ export function calculateBuildingCost(
     length,
     width,
     floors,
-    rooms, // Not directly used in calculation, but kept for potential future use or display
-    bathrooms, // Not directly used in calculation, but kept for potential future use or display
+    // rooms, // Removed as it's not directly used in calculation
+    // bathrooms, // Removed as it's not directly used in calculation
     rukoType,
   } = values;
 
@@ -46,7 +40,9 @@ export function calculateBuildingCost(
     };
   }
 
-  const percentages = calculatorData.roomPercentages[buildingType]?.[category];
+  // Use type assertion for calculatorData to resolve TS7053
+  const typedCalculatorData = calculatorData as CalculatorData;
+  const percentages = typedCalculatorData.roomPercentages[buildingType]?.[category];
 
   if (!percentages) {
     return {
@@ -78,9 +74,9 @@ export function calculateBuildingCost(
   roomAreas['Sisa Ruang Bebas'] = sisaRuangBebas;
 
 
-  const baseCost = calculatorData.baseCosts[buildingType];
-  const materialCoef = calculatorData.materialCoefs[material];
-  const designCoef = calculatorData.designCoefs[design];
+  const baseCost = typedCalculatorData.baseCosts[buildingType];
+  const materialCoef = typedCalculatorData.materialCoefs[material];
+  const designCoef = typedCalculatorData.designCoefs[design];
 
   if (!baseCost || !materialCoef || !designCoef) {
     return {
@@ -97,5 +93,6 @@ export function calculateBuildingCost(
     totalCost,
     totalArea,
     roomAreaDetails: roomAreas,
+    error: null, // Explicitly set error to null on success
   };
 }

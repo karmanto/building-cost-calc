@@ -1,18 +1,14 @@
-import React, { useState } from 'react';
+import { useState } from 'react'; // Removed 'React' as it's not explicitly used
 import CalculatorForm from '@/components/CalculatorForm';
 import ResultDisplay from '@/components/ResultDisplay';
 import { calculateBuildingCost } from '@/lib/calculations';
 import { CalculatorFormValues } from '@/lib/schemas';
 import { Toaster } from '@/components/ui/toaster';
 import { useToast } from '@/hooks/use-toast';
+import { CalculationResult } from '@/lib/types'; // Import CalculationResult type
 
 function App() {
-  const [calculationResult, setCalculationResult] = useState<{
-    totalCost: number | null;
-    totalArea: number | null;
-    roomAreaDetails: Record<string, number> | null;
-    error: string | null;
-  }>({
+  const [calculationResult, setCalculationResult] = useState<CalculationResult>({
     totalCost: null,
     totalArea: null,
     roomAreaDetails: null,
@@ -38,7 +34,7 @@ function App() {
           totalCost: null,
           totalArea: null,
           roomAreaDetails: null,
-          error: result.error,
+          error: result.error, // Ensure this is string | null
         });
         toast({
           title: 'Perhitungan Gagal',

@@ -1,7 +1,7 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react'; // Removed 'React' as it's not explicitly used
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Building, Ruler, LayoutGrid, DollarSign, Home, Bath, Bed } from 'lucide-react'; // Import icons
+import { Building, Ruler, LayoutGrid, Bath, Bed } from 'lucide-react'; // Removed DollarSign, Home
 
 import {
   Card,
@@ -27,7 +27,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
+// import { Separator } from '@/components/ui/separator'; // Removed Separator as it's not used
 
 import calculatorData from '@/data/calculatorData.json';
 import { CalculatorFormValues, calculatorSchema } from '@/lib/schemas';
@@ -74,7 +74,7 @@ const CalculatorForm: React.FC<CalculatorFormProps> = ({ onSubmit, isLoading }) 
   // Adjust kos category based on material
   useEffect(() => {
     if (buildingType === 'kos') {
-      const kosCategory = material === 'standar' ? 'ekonomi' : 'eksekutif';
+      // const kosCategory = material === 'standar' ? 'ekonomi' : 'eksekutif'; // Removed unused variable
       // This logic is more for internal calculation, not a form field
       // but if there was a 'kosCategory' field, it would be set here.
       // For now, it just ensures the internal logic aligns.
