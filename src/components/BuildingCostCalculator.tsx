@@ -149,7 +149,7 @@ const BuildingCostCalculator: React.FC = () => {
       roomAreas['R Terbuka'] = landArea * 0.25;
     } else if (buildingType === 'kos') {
       const s = sizes as KosRoomSizes; // Cast to specific type
-      roomAreas['K Utama'] = getArea(s['K Utama']) * 1;
+      roomAreas['K Utama'] = getArea(s['K Utama']) * rooms;
       roomAreas['Gudang'] = getArea(s['Gudang']) * 1;
       roomAreas['KM'] = getArea(s['KM']) * bathrooms;
       roomAreas['R. Makan'] = getArea(s['R. Makan']) * 1;
