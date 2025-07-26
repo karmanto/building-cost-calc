@@ -4,30 +4,30 @@
 
 @layer base {
   :root {
-    /* Light Theme Colors based on user request */
-    --background: 0 0% 100%; /* white */
-    --foreground: 0 0% 3.9%; /* near black, default text */
-    --card: 0 0% 100%; /* white */
-    --card-foreground: 0 0% 3.9%; /* near black */
-    --popover: 0 0% 100%; /* white */
-    --popover-foreground: 0 0% 3.9%; /* near black */
-    --primary: 209 54% 59%; /* #5B96D0 */
-    --primary-foreground: 0 0% 98%; /* white (for text on primary background) */
-    --secondary: 0 0% 96.1%; /* light gray */
-    --secondary-foreground: 0 0% 9%; /* dark gray */
-    --muted: 0 0% 96.1%; /* light gray */
-    --muted-foreground: 0 0% 45.1%; /* medium gray */
+    /* Light Theme Colors based on AdminDashboard styling */
+    --background: 0 0% 98%; /* A very light gray, similar to bg-gray-50 */
+    --foreground: 0 0% 9%; /* Near black, text-gray-900 */
+    --card: 0 0% 100%; /* White, bg-white for cards */
+    --card-foreground: 0 0% 9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 9%;
+    --primary: 217 91% 60%; /* A vibrant blue, similar to blue-600 */
+    --primary-foreground: 0 0% 98%; /* White for text on primary */
+    --secondary: 0 0% 96.1%; /* Light gray, similar to gray-100/gray-50 */
+    --secondary-foreground: 0 0% 9%;
+    --muted: 0 0% 96.1%;
+    --muted-foreground: 0 0% 45.1%; /* Medium gray, text-gray-500 */
     --accent: 330 80% 75%; /* #f472b6 (pink) - keeping previous accent for contrast */
-    --accent-foreground: 0 0% 9%; /* dark text for accent */
-    --destructive: 0 84.2% 60.2%; /* red */
-    --destructive-foreground: 0 0% 98%; /* white */
-    --border: 0 0% 89.8%; /* light gray */
-    --input: 0 0% 89.8%; /* light gray */
-    --ring: 209 54% 59%; /* #5B96D0 */
+    --accent-foreground: 0 0% 9%;
+    --destructive: 350 70% 50%; /* Red, similar to red-600 */
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 89.8%; /* Light gray, similar to gray-200/gray-300 */
+    --input: 0 0% 89.8%;
+    --ring: 217 91% 60%; /* Same as primary */
 
-    /* Custom Palette - aligning with user's request */
-    --surface: 0 0% 98%; /* slightly off-white for card/surface elements */
-    --text: 0 0% 3.9%; /* black - main body text */
+    /* Custom Palette - aligning with user's request, but for light theme */
+    --surface: 0 0% 100%; /* white for card/surface elements */
+    --text: 0 0% 9%; /* black - main body text */
     --textSecondary: 0 0% 45.1%; /* medium gray - secondary text */
     --success: 140 60% 40%; /* green */
     --warning: 40 90% 50%; /* orange */
