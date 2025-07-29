@@ -30,12 +30,26 @@ import {
   RoomSizes,
   MaterialCoefs,
   DesignCoefs,
-} from '@/lib/types'; // Updated import path
+} from '@/lib/types';
 
 import { calculateCost } from '@/lib/api';
 import { CalculateCostPayload } from '@/lib/types';
 
-const BuildingCostCalculator: React.FC = () => {
+// Import Dialog components
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import UserInputForm from './UserInputForm'; // Import UserInputForm
+
+interface BuildingCostCalculatorProps {
+  initialHasUserProvidedData: boolean;
+}
+
+const BuildingCostCalculator: React.FC<BuildingCostCalculatorProps> = ({ initialHasUserProvidedData }) => {
   const [buildingType, setBuildingType] = useState<keyof RoomSizes>('rumah');
   const [material, setMaterial] = useState<keyof MaterialCoefs>('standar');
   const [design, setDesign] = useState<keyof DesignCoefs>('minimalis');
@@ -47,10 +61,17 @@ const BuildingCostCalculator: React.FC = () => {
 
   const [isRoomsInputDisabled, setIsRoomsInputDisabled] = useState<boolean>(false);
   const [roomsLabelText, setRoomsLabelText] = useState<string>('Jumlah Kamar:');
+  
+  // States for results
   const [roomDetailsResult, setRoomDetailsResult] = useState<React.ReactNode | null>(null);
   const [workItemDetailsResult, setWorkItemDetailsResult] = useState<React.ReactNode | null>(null);
   const [totalCostResult, setTotalCostResult] = useState<React.ReactNode | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // New states for dialog and result visibility
+  const [isFormDialogOpen, setIsFormDialogOpen] = useState<boolean>(false);
+  const [hasUserProvidedDataInSession, setHasUserProvidedDataInSession] = useState<boolean>(initialHasUserProvidedData);
+  const [showCalculationResults, setShowCalculationResults] = useState<boolean>(false);
 
   useEffect(() => {
     if (buildingType === 'ruko') {
@@ -65,11 +86,29 @@ const BuildingCostCalculator: React.FC = () => {
     }
   }, [buildingType]);
 
-  const handleCalculateCost = async () => {
+  // Helper function to map room names
+  const mapRoomName = (name: string) => {
+    switch (name) {
+      case 'K Utama': return 'Kamar Utama';
+      case 'K Anak': return 'Kamar Anak';
+      case 'KM': return 'Kamar Mandi';
+      case 'R. Makan': return 'Ruang Makan';
+      case 'R Tamu': return 'Ruang Tamu';
+      case 'R Keluarga': return 'Ruang Keluarga';
+      case 'R Terbuka': return 'Ruang Terbuka';
+      case 'R Loundry': return 'Ruang Loundry';
+      case 'Sisa R Bebas': return 'Sisa Ruang Bebas';
+      default: return name;
+    }
+  };
+
+  // Function to perform the actual calculation
+  const performCalculation = async () => {
     setError(null);
     setRoomDetailsResult(null);
     setWorkItemDetailsResult(null);
     setTotalCostResult(null);
+    setShowCalculationResults(false); // Hide previous results
 
     const parsedLength = parseFloat(length);
     const parsedWidth = parseFloat(width);
@@ -110,6 +149,47 @@ const BuildingCostCalculator: React.FC = () => {
         </div>
       );
 
+      // Helper function to get room display name with count
+      const getRoomDisplayString = (item: any, totalRoomsInput: number, totalBathroomsInput: number) => {
+        const baseName = mapRoomName(item.roomName); // Use the existing mapping
+        let countSuffix = '';
+
+        switch (item.roomName) { // Use original roomName for logic
+          case 'K Utama':
+            countSuffix = `(${totalRoomsInput > 0 ? 1 : 0} ruangan)`;
+            break;
+          case 'Ruangan':
+            countSuffix = `(${totalRoomsInput ?? 0} ruangan)`;
+            break;
+          case 'K Anak':
+            const anakRoomsCount = Math.max(0, totalRoomsInput - 1);
+            countSuffix = `(${anakRoomsCount} ruangan)`;
+            break;
+          case 'KM':
+            countSuffix = `(${totalBathroomsInput} ruangan)`;
+            break;
+          case 'R. Makan':
+          case 'R Tamu':
+          case 'R Keluarga':
+          case 'R Terbuka':
+          case 'Sisa R Bebas':
+          case 'Dapur':
+          case 'Gudang':
+          case 'R Loundry':
+            countSuffix = '(1 ruangan)';
+            break;
+          default:
+            countSuffix = '(0 ruangan)'; 
+            break;
+        }
+
+        if (item.calculatedArea > 0) {
+          return `${baseName} ${countSuffix}`;
+        } else {
+          return <span className="text-muted-foreground italic">{`${baseName} ${countSuffix}`}</span>;
+        }
+      };
+
       setRoomDetailsResult(
         <>
           <h3 className="text-xl font-semibold text-foreground mb-4 text-center mt-2">Detail Luas Ruang</h3>
@@ -124,7 +204,9 @@ const BuildingCostCalculator: React.FC = () => {
             <TableBody className="bg-card">
               {roomDetailsResult.map((item: any, index: number) => (
                 <TableRow key={index} className="border-b border-border hover:bg-secondary transition-colors">
-                  <TableCell className="px-4 py-2 text-foreground">{item.calculatedArea > 0 ? item.roomName : <span className="text-muted-foreground italic">{item.roomName} (Tidak Digunakan)</span>}</TableCell>
+                  <TableCell className="px-4 py-2 text-foreground">
+                    {getRoomDisplayString(item, parsedRooms, parsedBathrooms)}
+                  </TableCell>
                   <TableCell className="px-4 py-2 text-foreground text-right">{item.calculatedArea.toFixed(2)}</TableCell>
                   <TableCell className="px-4 py-2 text-foreground">{item.recommendedSize}</TableCell>
                 </TableRow>
@@ -155,11 +237,28 @@ const BuildingCostCalculator: React.FC = () => {
           </Table>
         </>
       );
-
+      setShowCalculationResults(true); // Show results only after successful calculation
     } catch (err: any) {
       console.error('Error calculating cost:', err);
       setError(err.message || 'Terjadi kesalahan saat menghitung biaya. Silakan coba lagi.');
+      setShowCalculationResults(false); // Ensure results are hidden on error
     }
+  };
+
+  const handleCalculateCost = async () => {
+    if (!hasUserProvidedDataInSession) {
+      setIsFormDialogOpen(true); // Open the form dialog if user data is not provided
+      return; // Stop here, calculation will be triggered after form submission
+    }
+    // If user data is already provided, proceed with calculation
+    performCalculation();
+  };
+
+  const handleUserInputSuccess = (name: string) => { // Changed parameter to name
+    localStorage.setItem('calculatorUserName', name); // Persist name to localStorage
+    setHasUserProvidedDataInSession(true); // Mark user data as provided for the session
+    setIsFormDialogOpen(false); // Close the dialog
+    performCalculation(); // Re-trigger calculation now that user data is available
   };
 
   return (
@@ -318,7 +417,8 @@ const BuildingCostCalculator: React.FC = () => {
         </CardContent>
       </Card>
 
-      {roomDetailsResult && (
+      {/* Conditional rendering of results */}
+      {showCalculationResults && roomDetailsResult && (
         <Card className="w-full max-w-4xl bg-card shadow-lg border-border rounded-xl p-2 md:p-8 mt-8 animate-fade-in-up">
           <CardContent className="p-0">
             {roomDetailsResult}
@@ -326,7 +426,7 @@ const BuildingCostCalculator: React.FC = () => {
         </Card>
       )}
 
-      {workItemDetailsResult && (
+      {showCalculationResults && workItemDetailsResult && (
         <Card className="w-full max-w-4xl bg-card shadow-lg border-border rounded-xl p-2 md:p-8 mt-8 animate-fade-in-up">
           <CardContent className="p-0">
             {workItemDetailsResult}
@@ -334,13 +434,26 @@ const BuildingCostCalculator: React.FC = () => {
         </Card>
       )}
 
-      {totalCostResult && (
+      {showCalculationResults && totalCostResult && (
         <Card className="w-full max-w-4xl bg-card shadow-lg border-primary/50 rounded-xl p-2 md:p-8 mt-8 animate-fade-in-up">
           <CardContent className="p-0">
             {totalCostResult}
           </CardContent>
         </Card>
       )}
+
+      {/* User Input Form Dialog */}
+      <Dialog open={isFormDialogOpen} onOpenChange={setIsFormDialogOpen}>
+        <DialogContent className="sm:max-w-[425px] bg-card border-border rounded-xl p-6">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold text-foreground">Informasi Pengguna</DialogTitle>
+            <DialogDescription className="text-muted-foreground">
+              Mohon lengkapi data Anda untuk melanjutkan perhitungan.
+            </DialogDescription>
+          </DialogHeader>
+          <UserInputForm onSuccess={handleUserInputSuccess} onClose={() => setIsFormDialogOpen(false)} />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

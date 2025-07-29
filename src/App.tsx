@@ -8,7 +8,6 @@ import { setAuthErrorHandler } from './lib/auth';
 import CalculatorDataEditor from './pages/admin/CalculatorDataEditor';
 import CalculatorDataShow from './pages/admin/CalculatorDataShow';
 import ProtectedRoute from './components/ProtectedRoute';
-import UserInputForm from './components/UserInputForm'; // New import
 
 function App() {
   const navigate = useNavigate();
@@ -20,17 +19,13 @@ function App() {
       navigate('/login', { replace: true });
     });
 
-    const userEmail = localStorage.getItem('calculatorUserEmail');
-    if (userEmail) {
+    // Check for user data using the new key
+    const userName = localStorage.getItem('calculatorUserName');
+    if (userName) {
       setHasUserProvidedData(true);
     }
     setIsLoadingUserCheck(false); 
   }, [navigate]);
-
-  const handleUserDataSet = (email: string) => {
-    localStorage.setItem('calculatorUserEmail', email); 
-    setHasUserProvidedData(true);
-  };
 
   if (isLoadingUserCheck) {
     return (
@@ -46,11 +41,8 @@ function App() {
           <Routes>
             <Route path="/" element={
               <>
-                {hasUserProvidedData ? (
-                  <BuildingCostCalculator />
-                ) : (
-                  <UserInputForm onUserDataSet={handleUserDataSet} />
-                )}
+                {/* Always render BuildingCostCalculator, it will handle the UserInputForm internally */}
+                <BuildingCostCalculator initialHasUserProvidedData={hasUserProvidedData} />
                 <Toaster />
               </>
             } />

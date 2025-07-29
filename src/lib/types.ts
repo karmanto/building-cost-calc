@@ -155,13 +155,15 @@ export interface UpdateCalculatorPayload {
 
 export interface CalculatorUserPayload {
   name: string;
-  email: string;
+  whatsapp_number: string;
+  domisili: string;
 }
 
 export interface CalculatorUser {
   id: number;
   name: string;
-  email: string;
+  whatsapp_number: string;
+  domisili: string;
   created_at: string;
   updated_at: string;
 }

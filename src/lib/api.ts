@@ -1,125 +1,86 @@
 import {
   CalculateCostPayload,
   CalculateCostResponse,
-  CalculatorData,
   UpdateCalculatorPayload,
+  CalculatorData,
   CalculatorUserPayload,
   SaveCalculatorUserResponse,
   CheckCalculatorUserResponse,
 } from './types';
-import { handleAuthError } from './auth'; 
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
-function getAuthHeaders(): HeadersInit {
-  const token = localStorage.getItem('token');
+// Helper to get auth token
+const getAuthToken = () => {
+  return localStorage.getItem('token');
+};
+
+// Helper for API requests
+const apiRequest = async <T>(
+  url: string,
+  method: string,
+  body?: object,
+  requiresAuth: boolean = false
+): Promise<T> => {
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
-    'Accept': 'application/json',
   };
-  if (token) {
+
+  if (requiresAuth) {
+    const token = getAuthToken();
+    if (!token) {
+      throw new Error('Authentication token not found. Please log in.');
+    }
     headers['Authorization'] = `Bearer ${token}`;
   }
-  return headers;
-}
 
-async function authenticatedFetch(url: string, options?: RequestInit) {
-  const response = await fetch(url, options);
-
-  if (response.status === 401) {
-    handleAuthError(); 
-    throw new Error('Unauthorized: Session expired or invalid token.');
-  }
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.error ? JSON.stringify(errorData.error) : `API Error: ${response.statusText}`);
-  }
-
-  return response;
-}
-
-async function unauthenticatedFetch(url: string, options?: RequestInit) {
-  const response = await fetch(url, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      ...options?.headers, 
-    },
+  const response = await fetch(`${API_BASE_URL}${url}`, {
+    method,
+    headers,
+    body: body ? JSON.stringify(body) : undefined,
   });
 
   if (!response.ok) {
     const errorData = await response.json();
-    throw new Error(errorData.message ? JSON.stringify(errorData.message) : `API Error: ${response.statusText}`);
+    throw new Error(JSON.stringify(errorData.error || 'Something went wrong'));
   }
 
-  return response;
-}
+  return response.json();
+};
 
-export async function calculateCost(payload: CalculateCostPayload): Promise<CalculateCostResponse> {
-  try {
-    const response = await authenticatedFetch(`${API_BASE_URL}/calculate-cost`, {
-      method: 'POST',
-      headers: getAuthHeaders(), 
-      body: JSON.stringify(payload),
-    });
-    return response.json();
-  } catch (error) {
-    console.error('Error calculating cost:', error);
-    throw error;
-  }
-}
+export const calculateCost = async (
+  payload: CalculateCostPayload
+): Promise<CalculateCostResponse> => {
+  return apiRequest<CalculateCostResponse>('/calculate-cost', 'POST', payload);
+};
 
-export async function getCalculatorData(): Promise<CalculatorData> {
-  try {
-    const response = await authenticatedFetch(`${API_BASE_URL}/calculator-data`, {
-      method: 'GET',
-      headers: getAuthHeaders(), 
-    });
-    return response.json();
-  } catch (error) {
-    console.error('Error fetching calculator data:', error);
-    throw error;
-  }
-}
+export const getCalculatorData = async (): Promise<CalculatorData> => {
+  return apiRequest<CalculatorData>('/calculator-data', 'GET', undefined, true);
+};
 
-export async function updateCalculatorData(payload: UpdateCalculatorPayload): Promise<{ message: string }> {
-  try {
-    const response = await authenticatedFetch(`${API_BASE_URL}/calculator-data`, {
-      method: 'PUT',
-      headers: getAuthHeaders(), 
-      body: JSON.stringify(payload),
-    });
-    return response.json();
-  } catch (error) {
-    console.error('Error updating calculator data:', error);
-    throw error;
-  }
-}
+export const updateCalculatorData = async (
+  payload: UpdateCalculatorPayload
+): Promise<{ message: string }> => {
+  return apiRequest<{ message: string }>(
+    '/calculator-data',
+    'PUT',
+    payload,
+    true
+  );
+};
 
-export async function saveCalculatorUser(payload: CalculatorUserPayload): Promise<SaveCalculatorUserResponse> {
-  try {
-    const response = await unauthenticatedFetch(`${API_BASE_URL}/calculator-users`, {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    });
-    return response.json();
-  } catch (error) {
-    console.error('Error saving calculator user:', error);
-    throw error;
-  }
-}
+export const saveCalculatorUser = async (
+  payload: CalculatorUserPayload
+): Promise<SaveCalculatorUserResponse> => {
+  return apiRequest<SaveCalculatorUserResponse>('/calculator-users', 'POST', payload);
+};
 
-export async function checkCalculatorUser(email: string): Promise<CheckCalculatorUserResponse> {
-  try {
-    const response = await unauthenticatedFetch(`${API_BASE_URL}/calculator-users/check`, {
-      method: 'POST', 
-      body: JSON.stringify({ email }),
-    });
-    return response.json();
-  } catch (error) {
-    console.error('Error checking calculator user:', error);
-    throw error;
-  }
-}
+export const checkCalculatorUser = async (
+  email: string
+): Promise<CheckCalculatorUserResponse> => {
+  return apiRequest<CheckCalculatorUserResponse>(`/calculator-users/check?email=${encodeURIComponent(email)}`, 'GET');
+};
+
+export const getCalculatorUsers = async (): Promise<CalculatorUserPayload[]> => {
+  return apiRequest<CalculatorUserPayload[]>('/calculator-users', 'GET', undefined, true);
+};
